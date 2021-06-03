@@ -1,5 +1,3 @@
-from collections import UserString
-import enum
 import typing
 from enum import IntEnum
 from datetime import datetime
@@ -7,10 +5,7 @@ from datetime import datetime
 import pytz
 import requests
 from dateutil.relativedelta import relativedelta
-from requests.models import DEFAULT_REDIRECT_LIMIT
 
-
-# https://appointment.vaccine.gov.sg/api/v1/locations?startDate=2021-06-04&endDate=2021-09-30&patientGroupId=3
 
 class Routes:
     BASE = 'https://appointment.vaccine.gov.sg/api/v1'
@@ -20,6 +15,7 @@ class Routes:
 
 
 class Group(IntEnum):
+    """Group of people from the vaccination drive"""
     # GENERAL = 0
     GENERAL = 1
     MOM_FOREIGN_WORKER = 2
@@ -28,10 +24,28 @@ class Group(IntEnum):
 
 
 class ExitNow(BaseException):
+    """Exit the program"""
     pass
 
 
-def get_dates(start_dt=None, first_dose=True) -> typing.Tuple[str, str]:
+def get_dates(start_dt: datetime=None, first_dose: bool=True) -> typing.Tuple[str, str]:
+    """Calculates the dates required for API requests
+
+    Arguments
+    ---------
+    start_dt: datetime.datetime - Optional
+        The date of the first dose
+        Expected to be included if first_dose=False
+
+    first_dose: bool - Optional
+        Whether we are calculating for first or second dose
+        Defaults to True
+
+    Returns
+    -------
+    Tuple[str, str] -> (start_date, end_date)
+    """
+
     if start_dt is None:
         tz = pytz.timezone('Asia/Singapore')
         start_dt = datetime.now(tz)
@@ -52,7 +66,23 @@ def get_dates(start_dt=None, first_dose=True) -> typing.Tuple[str, str]:
     return (start_date, end_date)
 
 
-def format_date(dt, *, strftime=False):
+def format_date(dt: typing.Optional[str], *, strftime: bool=False) -> typing.Optional[typing.Union[datetime, str]]:
+    """Formats the date from a `%Y-%m-%dT%H:%M:%S.%fZ` format
+
+    Arguments
+    ---------
+    dt: Optional[str]
+        Datetime formatted as `%Y-%m-%dT%H:%M:%S.%fZ`.
+        If dt is not a str, dt is returned as-is.
+
+    strftime: bool - Optional
+        Whether to format the dt as `%d/%m/%Y %H%Mh` before returning
+        Defaults to False
+
+    Returns
+    -------
+    A `datetime.datetime` object or a str or the original type
+    """
     if isinstance(dt, str):
         dt = datetime.strptime(dt, r'%Y-%m-%dT%H:%M:%S.%fZ')
 
@@ -62,7 +92,24 @@ def format_date(dt, *, strftime=False):
     return dt
 
 
-def pretty_print(header: typing.Tuple[str], values: typing.List[typing.Tuple[str]]):
+def pretty_print(header: typing.Tuple[str], values: typing.List[typing.Tuple[str]]) -> None:
+    """Prints the given data formatted as a nice table into stdout
+
+    Arguments
+    --------
+    header: Tuple[str]
+        Should have the same length as a data entry
+
+    values: List[Tuple[str]]
+        List of rows, each tuple is a data entry
+
+    Example
+    -------
+    ```python
+        pretty_print(('Name', 'Class'), [('Tom', '1A'), ('Tim', '1B')])
+    ```
+    """
+
     maxlens = []
     for i in header:
         maxlens.append(len(i))
@@ -80,7 +127,7 @@ def pretty_print(header: typing.Tuple[str], values: typing.List[typing.Tuple[str
 
     fmt = ''
     for n in range(len(header)):
-        fmt +=  '-' * (maxlens[n] + 2) + ' '
+        fmt += '-' * (maxlens[n] + 2) + ' '
     print(fmt)
 
     for val in values:
@@ -95,13 +142,20 @@ def pretty_print(header: typing.Tuple[str], values: typing.List[typing.Tuple[str
         print(fmt)
 
 
-def print_locations(group: Group):
+def print_locations(group: Group) -> None:
+    """Prints out the locations for a specific group
+
+    Arguments
+    ---------
+    group: Group
+        Group from the vaccination drive
+    """
     start, end = get_dates()
 
     locations = requests.get(Routes.LOCATIONS.format(start_date=start, end_date=end, group_id=int(group))).json()
     locations = sorted(locations, key=lambda x: format_date(x['earliestSlot']).timestamp() if x['earliestSlot'] else 10**10)
     # List[Dict['name', 'hci_code', 'address', 'latitude', 'longitude', 'earliestSlot', 'priority', 'minInterval', 'maxInterval', 'minClinicInterval', 'maxClinicInterval', 'vaccineType']]
-    
+
     header = ('Location', 'ID', 'Earliest Slot', 'Vaccine Type')
 
     values = []
@@ -111,7 +165,23 @@ def print_locations(group: Group):
     pretty_print(header, values)
 
 
-def print_details(hci_code, start_dt=None, first_dose=True):
+def print_details(hci_code: str, start_dt: datetime=None, first_dose: bool=True) -> None:
+    """Prints out the availability details of a timeslot
+
+    Arguments
+    ---------
+    hci_code: str
+        Vaccination center code
+
+    start_dt: datetime.datetime - Optional
+        The date of the first dose
+        Expected to be included if first_dose=False
+
+    first_dose: bool - Optional
+        Whether we are calculating for first or second dose
+        Defaults to True
+    """
+
     start, end = get_dates(start_dt, first_dose)
 
     availability = requests.get(Routes.AVAILABILITY.format(start_date=start, end_date=end, hci_code=hci_code, first_dose=first_dose)).json()
@@ -140,7 +210,8 @@ def print_details(hci_code, start_dt=None, first_dose=True):
     pretty_print(header, values)
 
 
-def get_locations():
+def get_locations() -> None:
+    """Gets the location from user input"""
     print('Which group?')
     for i in Group:
         print(f'{i.value}: {i.name}')
@@ -156,7 +227,7 @@ def get_locations():
         print_locations(group)
 
 
-def main():
+def main() -> None:
     try:
         get_locations()
     except ExitNow:
