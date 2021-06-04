@@ -109,4 +109,3 @@ def pretty_print(header: typing.Tuple[str], values: typing.List[typing.Tuple[str
             fmt += f'{i:^{maxlens[n] + 3}}'
 
         print(fmt)
-

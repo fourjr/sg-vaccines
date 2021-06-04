@@ -54,7 +54,7 @@ class Location:
 
 
 class TimeSlot:
-    def __init__(self, api: 'API',  data: typing.Dict[str, typing.Union[int, str]]) -> None:
+    def __init__(self, api: 'API', data: typing.Dict[str, typing.Union[int, str]]) -> None:
         self._api = api
 
         self.id = data.pop('id', None)
