@@ -7,3 +7,8 @@ The system has an internal API that checks for date availability.
 This script uses the API and through a command like interface allows users to check for slot availability.
 
 just a proof-of-concept :D
+
+[![All Graph](images/all.svg)](https://fourjr.github.io/sg-vaccines/all.html)
+[![Groups Graph](images/groups.svg)](https://fourjr.github.io/sg-vaccines/groups.html)
+[![Locations Graph](images/locations.svg)](https://fourjr.github.io/sg-vaccines/locations.html)
+[![Types Graph](images/types.svg)](https://fourjr.github.io/sg-vaccines/types.html)
