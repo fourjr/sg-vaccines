@@ -61,12 +61,11 @@ def print_details(hci_code: str, first_dose_date: datetime=None) -> None:
         print('Invalid choice')
         return
 
-    header = ('Time', 'Availability')
+    header = ('Time',)
     values = []
     for i in chosen:
         time = i.time.strftime(r'%H%Mh')
-        vals = (time, str(i))
-        values.append(vals)
+        values.append((time,))
 
     pretty_print(header, values)
 
@@ -94,7 +93,6 @@ def main() -> None:
     except ExitNow:
         return
 
-    print()
     loc_id = input('Location ID: ')
     try:
         dose = int(input('1: First Dose\n2: Second Dose\nDose number: '))

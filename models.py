@@ -27,7 +27,7 @@ class Group(IntEnum):
 
 
 class VaccineType(IntEnum):
-    Pfizer = 1
+    Pfizer_Comirnaty = 1
     Moderna = 2
 
 
@@ -47,7 +47,7 @@ class Location:
         self.max_interval = data.pop('maxInterval', None)
         self.min_clinic_interval = data.pop('minClinicInterval', None)
         self.max_clinic_interval = data.pop('maxClinicInterval', None)
-        self.vaccine_type = VaccineType[data.pop('vaccineType')]
+        self.vaccine_type = VaccineType[data.pop('vaccineType').replace('/', '_')]
 
     def get_date_slots(self, first_dose_date: datetime=None) -> typing.Dict[str, typing.List['TimeSlot']]:
         return self._api.get_date_slots(self.hci_code, first_dose_date)
@@ -59,11 +59,7 @@ class TimeSlot:
 
         self.id = data.pop('id', None)
         self.time = parse_date(data.pop('time', None))
-        self.capacity = data.pop('capacity')
-        self.count = data.pop('count')
-
-    def __str__(self) -> str:
-        return f'{self.count}/{self.capacity}'
+        self.has_capacity = data.pop('hasCapacity')
 
 
 class API:
